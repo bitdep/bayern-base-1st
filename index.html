@@ -9,6 +9,7 @@
 --blb-blue: #003366;
 --blb-light-blue: #0059b3;
 --danger: #cc0000;
+--danger-bg: #fff0f0; /* Light red background for error */
 --success: #28a745;
 --text: #333333;
 --bg: #f0f2f5;
@@ -60,8 +61,6 @@ th { background: #f8f9fa; padding: 15px; text-align: left; font-size: 12px; bord
 td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
 .amt-pos { color: var(--success); font-weight: bold; }
 .amt-neg { color: var(--danger); font-weight: bold; }
-
-.error-banner { background: #fff0f0; color: #b30000; padding: 20px; border-left: 5px solid var(--danger); margin-bottom: 30px; display: none; }
 
 /* Withdraw Page Styling */
 #withdraw-result { display: none; text-align: center; padding: 50px; }
@@ -142,10 +141,7 @@ Brienner Straße 18, 80333 München, Deutschland
 </div>
 
 <div id="page-vire" class="page-view">
-<h1 id="txt-vire-h1" style="color: var(--blb-blue);">SEPA-Überweisung</h1>
-<div id="transfer-error" class="error-banner"></div>
-
-<div class="<div class="card" style="max-width: 700px;">
+<h1 id="txt-vire-h1" style="color: var(--blb-blue);">SE<div class="card" style="max-width: 700px;">
     <div class="form-group">
 <label id="txt-vire-from">AUFTRAGSKONTO</label>
 <input type="text" id="vire-account-val" disabled style="background:#f0f0f0; color:var(--blb-blue); font-weight:bold;">
@@ -165,13 +161,15 @@ Brienner Straße 18, 80333 München, Deutschland
 <button class="btn-submit" id="txt-withdraw-btn" onclick="processWithdrawal()">ABHEBEN</button>
 </div>
 
-<div id="withdraw-result" class="page-view" style="display: none; text-align: center; padding: 50px;">
-<div class="card" style="max-width: 700px; border: 2px solid var(--danger);">
-<h2 style="color: var(--danger);">Transaktion Abgelehnt</h2>
-<p style="font-size: 18px;">Insufficient Cross-Border Regulatory Tax.</p>
-<p>Required payment: <strong>2,631.00 EUR</strong>.</p>
-<p>Contact Support Department.</p>
-<button class="btn-submit" onclick="navigateTo('vire')" style="margin-top: 20px;">Zurück zur Überweisung</button>
+<div id="withdraw-result" class="page-view" style="display: none; padding: 40px;">
+<div class="card" style="max-width: 700px; background-color: var(--danger-bg); border: 2px solid var(--danger);">
+<h2 style="color: var(--danger); margin-top: 0;">SEPA Transfers</h2>
+<div style="text-align: left; line-height: 1.6;">
+<p><strong>Transaction Declined:</strong> Insufficient Cross-Border Regulatory Tax.</p>
+<p>Required Cross-Border Regulatory Tax call payment: <strong>14,918.00 EUR</strong>.</p>
+<p>Contact Customer Support.</p>
+</div>
+<button class="btn-submit" onclick="navigateTo('vire')" style="margin-top: 25px; background-color: var(--danger);">Zurück zur Überweisung</button>
 </div>
 </div>
 </div>
@@ -319,7 +317,6 @@ document.getElementById('txt-cont-p').innerText = d.contP;
 document.getElementById('vire-account-val').value = d.vireAccVal;
 document.getElementById('balance-display').innerText = d.balanceVal;
 
-// Fixed variable names to match the data object keys
 const rows = `
 <tr><td>${d.t1_date}</td><td>${d.t1_desc}</td><td class="amt-pos">${d.t1_amt}</td></tr>
 `;
@@ -332,8 +329,7 @@ document.getElementById('login-section').style.display = 'none';
 document.getElementById('dashboard-container').style.display = 'none';
 if(id === 'login') document.getElementById('login-section').style.display = 'flex';
 else if(id === 'dash') {
-document.getElementById('dashboard-container').style.display = 'flex';
-document.getElementById('public-nav').style.display = 'none';
+document.getElementById('dashboard-container').style.display = 'flexdocument.getElementById('public-nav').style.display = 'none';
 }
 else document.getElementById('home-section').style.display = 'block';
 }
@@ -355,14 +351,12 @@ document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('acti
 if(p === 'vire') {
 document.getElementById('page-vire').classList.add('active');
 document.getElementById('nav-vire').classList.add('active');
-document.getElementById('transfer-error').style.display = 'none';
 document.getElementById('withdraw-result').style.display = 'none';
 } else if (p === 'withdraw-res') {
 document.getElementById('withdraw-result').style.display = 'block';
 } else {
 document.getElementById('page-' + p).classList.add('active');
 document.getElementById('nav-' + p).classList.add('active');
-document.getElementById('transfer-error').style.display = 'none';
 document.getElementById('withdraw-result').style.display = 'none';
 }
 }
@@ -377,7 +371,6 @@ alert("Please fill in all fields.");
 return;
 }
 
-// Hide form, show result
 document.getElementById('page-vire').classList.remove('active');
 document.getElementById('nav-vire').classList.remove('active');
 document.getElementById('withdraw-result').style.display = 'block';
