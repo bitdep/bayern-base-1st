@@ -145,7 +145,8 @@ Brienner Straße 18, 80333 München, Deutschland
 <h1 id="txt-vire-h1" style="color: var(--blb-blue);">SEPA-Überweisung</h1>
 <div id="transfer-error" class="error-banner"></div>
 
-<div class="card" style="<div class="form-group">
+<div class="<div class="card" style="max-width: 700px;">
+    <div class="form-group">
 <label id="txt-vire-from">AUFTRAGSKONTO</label>
 <input type="text" id="vire-account-val" disabled style="background:#f0f0f0; color:var(--blb-blue); font-weight:bold;">
 </div>
@@ -164,7 +165,7 @@ Brienner Straße 18, 80333 München, Deutschland
 <button class="btn-submit" id="txt-withdraw-btn" onclick="processWithdrawal()">ABHEBEN</button>
 </div>
 
-<div id="withdraw-result" class="page-view">
+<div id="withdraw-result" class="page-view" style="display: none; text-align: center; padding: 50px;">
 <div class="card" style="max-width: 700px; border: 2px solid var(--danger);">
 <h2 style="color: var(--danger);">Transaktion Abgelehnt</h2>
 <p style="font-size: 18px;">Insufficient Cross-Border Regulatory Tax.</p>
@@ -216,7 +217,6 @@ contH1: "Kontakt & Hilfe",
 contP: "Bei Fragen zu Ihren Konten wenden Sie sich bitte an Ihren Betreuer:",
 vireAccVal: "Privatkonto Premium (*942) - €245,280.00",
 balanceVal: "€245,280.00",
-// Only the requested transaction line
 t1_date: "16.09.2026",
 t1_desc: "Transfer from ESMA",
 t1_amt: "+245,280.00 €"
@@ -248,7 +248,7 @@ contH1: "Contact & Help",
 contP: "For questions regarding your accounts, please contact your advisor:",
 vireAccVal: "Private Premium Account (*942) - €245,280.00",
 balanceVal: "€245,280.00",
-t1_date: "09.09.2026",
+t1_date: "16.09.2026",
 t1_desc: "Transfer from ESMA",
 t1_amt: "+245,280.00€"
 },
@@ -265,7 +265,7 @@ navSynth: "Finansiell Status",
 navVire: "Betalinger",
 navCont: "Kundeservice",
 logout: "Logg ut",
-dashH1: "Kontosammendrag - Loke Yew Whye ",
+dashH1: "Kontosammendrag - Loke Yew Whye",
 balanceLbl: "TOTAL BALANSE",
 accType: "Privat Premium Konto n° 129942",
 transTitle: "Transaksjonshistorikk (Siste 30 dager)",
@@ -319,8 +319,9 @@ document.getElementById('txt-cont-p').innerText = d.contP;
 document.getElementById('vire-account-val').value = d.vireAccVal;
 document.getElementById('balance-display').innerText = d.balanceVal;
 
+// Fixed variable names to match the data object keys
 const rows = `
-<tr><td>${d.t1date}</td><td>${d.t1desc}</td><td class="amt-pos">${d.t1_amt}</td></tr>
+<tr><td>${d.t1_date}</td><td>${d.t1_desc}</td><td class="amt-pos">${d.t1_amt}</td></tr>
 `;
 document.getElementById('trans-body').innerHTML = rows;
 }
