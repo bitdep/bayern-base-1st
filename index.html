@@ -8,6 +8,7 @@
 :root {
 --blb-blue: #003366;
 --blb-light-blue: #0059b3;
+--blb-accent: #e5edf5;
 --danger: #cc0000;
 --success: #28a745;
 --text: #333333;
@@ -53,7 +54,12 @@ body, html { margin: 0; padding: 0; font-family: "Arial", sans-serif; background
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: var(--blb-blue); }
 .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; box-sizing: border-box; }
+.form-group input:focus { outline: none; border-color: var(--blb-light-blue); }
 .btn-submit { width: 100%; padding: 15px; background: var(--blb-light-blue); color: white; border: none; font-weight: bold; cursor: pointer; }
+.btn-submit:hover { background: var(--blb-blue); }
+
+.btn-secondary { background: #fff; color: var(--blb-blue); border: 2px solid var(--blb-blue); padding: 12px 24px; font-weight: bold; cursor: pointer; }
+.btn-secondary:hover { background: var(--blb-blue); color: #fff; }
 
 table { width: 100%; border-collapse: collapse; }
 th { background: #f8f9fa; padding: 15px; text-align: left; font-size: 12px; border-bottom: 2px solid #ddd; }
@@ -62,10 +68,26 @@ td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
 .amt-neg { color: var(--danger); font-weight: bold; }
 
 .error-banner { background: #fff0f0; color: #b30000; padding: 20px; border-left: 5px solid var(--danger); margin-bottom: 30px; display: none; }
+.success-banner { background: #e8f5e9; color: #2e7d32; padding: 20px; border-left: 5px solid var(--success); margin-bottom: 30px; display: none; }
 
-/* Withdraw Page Styling */
-#withdraw-result { display: none; text-align: center; padding: 50px; }
+/* Transfer form */
+.transfer-form { max-width: 600px; }
+.transfer-form .form-group input, .transfer-form .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; box-sizing: border-box; }
+
+/* Support cards */
+.support-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.support-card { background: #fff; padding: 25px; border: 1px solid #e1e1e1; }
+.support-card h3 { color: var(--blb-blue); margin-top: 0; }
+.support-card p { color: #666; font-size: 14px; line-height: 1.6; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { width: 200px; }
+  .main-view { margin-left: 200px; width: calc(100% - 200px); padding: 20px; }
+  #public-nav { padding: 15px 4%; }
+}
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -98,6 +120,7 @@ Brienner Straße 18, 80333 München, Deutschland
 <section id="login-section">
 <div class="login-card">
 <h2 id="txt-login-h2" style="color:var(--blb-blue); margin-top:0;">Anmeldung</h2>
+<div class="error-banner" id="login-error">Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.</div>
 <div class="form-group">
 <label id="txt-label-user">BENUTZERNAME / KONTO-NR.</label>
 <input type="text" id="user" placeholder="">
@@ -107,6 +130,9 @@ Brienner Straße 18, 80333 München, Deutschland
 <input type="password" id="pass" placeholder="••••••••">
 </div>
 <button class="btn-submit" id="txt-btn-auth" onclick="attemptLogin()">LOGIN BESTÄTIGEN</button>
+<p style="text-align:center; margin-top:20px; font-size:12px; color:#666;">
+<a href="#" onclick="showSection('home')" style="color:var(--blb-light-blue);">Zurück zur Startseite</a>
+</p>
 </div>
 </section>
 
@@ -116,15 +142,17 @@ Brienner Straße 18, 80333 München, Deutschland
 <div class="sidebar-item active" id="nav-synth" onclick="navigateTo('synth')">Finanzstatus</div>
 <div class="sidebar-item" id="nav-vire" onclick="navigateTo('vire')">Zahlungsverkehr</div>
 <div class="sidebar-item" id="nav-cont" onclick="navigateTo('cont')">Kundenbetreuung</div>
-<div class="sidebar-item" id="txt-logout" onclick="location.reload()" style="margin-top: 40px; opacity: 0.7;">Abmelden</div>
+<div class="sidebar-item" id="txt-logout" onclick="logout()" style="margin-top: 40px; opacity: 0.7;">Abmelden</div>
 </div>
 
 <div class="main-view">
+
+<!-- FINANZSTATUS -->
 <div id="page-synth" class="page-view active">
-<h1 id="txt-dash-h1" style="color: var(--blb-blue);">Kontoübersicht</h1>
+<h1 id="txt-dash-h1" style="color: var(--blb-blue);">Kontoübersicht - Herr Ferdinand Eduard van Maanen</h1>
 <div class="card">
 <span id="txt-balance-lbl" style="color:#666; font-size:13px; font-weight:bold;">GESAMT-SALDO</span>
-<div class="balance-val" id="balance-display">€245,280.00</div>
+<div class="balance-val" id="balance-display">82,893.89 €</div>
 <div id="txt-account-type" style="color:var(--blb-light-blue); font-weight:bold;">Privatkonto Premium n° 129942</div>
 </div>
 
@@ -132,58 +160,147 @@ Brienner Straße 18, 80333 München, Deutschland
 <div id="txt-trans-title" style="padding:20px; font-weight:bold; border-bottom:1px solid #eee;">Umsatzanzeige (Letzte 30 Tage)</div>
 <table>
 <thead>
-<tr id="txt-table-head"><th>BUCHUNGSTAG</th><th>VERWENDUNGSZWECK</th><th>BETRAG</th></tr>
+<tr>
+<th id="th-date">Datum</th>
+<th id="th-desc">Beschreibung</th>
+<th id="th-cat">Kategorie</th>
+<th id="th-amt">Betrag</th>
+</tr>
 </thead>
-<tbody id="trans-body">
-<!-- Content handled by JS -->
+<tbody>
+<tr>
+<td>06.09.2026</td>
+<td>Banking Circle</td>
+<td>Transfer</td>
+<td class="amt-pos">+53,441 €</td>
+</tr>
+<tr>
+<td>07.09.2026</td>
+<td>CoinCover Inc</td>
+<td>Chargeback Transfer</td>
+<td class="amt-pos">+5,002 €</td>
+</tr>
+<tr>
+<td>07.09.2026</td>
+<td>Bitelity Finance LTD</td>
+<td>Transfer</td>
+<td class="amt-pos">+4,000 €</td>
+</tr>
+<tr>
+<td>09.09.2026</td>
+<td>LB Bayern Finance</td>
+<td>Refund Transfer</td>
+<td class="amt-pos">+8,432 €</td>
+</tr>
+<tr>
+<td>10.09.2026</td>
+<td>LB Bayern Finance</td>
+<td>Authorization Transfer</td>
+<td class="amt-pos">+3,000 €</td>
+</tr>
+<tr>
+<td>11.09.2026</td>
+<td>Banking Circle</td>
+<td>Security Check Box Refund</td>
+<td class="amt-pos">+9,010 €</td>
+</tr>
 </tbody>
 </table>
 </div>
 </div>
 
+<!-- ZAHLUNGSVERKEHR -->
 <div id="page-vire" class="page-view">
-<h1 id="txt-vire-h1" style="color: var(--blb-blue);">SEPA-Überweisung</h1>
-<div id="transfer-error" class="error-banner"></div>
-
-<div class="card" style
-D
-<div class="card" style="max-width: 700px;">
+<h1 style="color: var(--blb-blue);">Zahlungsverkehr</h1>
+<div class="success-banner" id="transfer-success">Überweisung wurde erfolgreich ausgeführt.</div>
+<div class="card transfer-form">
+<h3 style="margin-top:0; color:var(--blb-blue);">Neue Überweisung</h3>
 <div class="form-group">
-<label id="txt-vire-from">AUFTRAGSKONTO</label>
-<input type="text" id="vire-account-val" disabled style="background:#f0f0f0; color:var(--blb-blue); font-weight:bold;">
-</div>
-<div class="form-group">
-<label id="txt-vire-name">VOLLSTÄNDIGER NAME</label>
-<input type="text" id="withdraw-name">
+<label>Empfänger</label>
+<input type="text" id="transfer-name" placeholder="Name des Empfängers">
 </div>
 <div class="form-group">
 <label>IBAN</label>
-<input type="text" id="withdraw-iban">
+<input type="text" id="transfer-iban" placeholder="DE00 0000 0000 0000 0000 00">
 </div>
 <div class="form-group">
-<label id="txt-vire-amt">BETRAG (€)</label>
-<input type="number" id="withdraw-amt">
+<label>Betrag (€)</label>
+<input type="number" id="transfer-amount" placeholder="0,00">
 </div>
-<button class="btn-submit" id="txt-withdraw-btn" onclick="processWithdrawal()">ABHEBEN</button>
+<div class="form-group">
+<label>Verwendungszweck</label>
+<input type="text" id="transfer-ref" placeholder="Verwendungszweck">
 </div>
-
-<div id="withdraw-result" class="page-view" style="display: none; text-align: center; padding: 50px;">
-<div class="card" style="max-width: 700px; border: 2px solid var(--danger);">
-<h2 style="color: var(--danger);">SEPA Transfers</h2>
-<p style="font-size: 18px; font-weight: bold;">Transaction Declined: Insufficient Cross-Border Regulatory Tax.</p>
-<p>Required Cross-Border Regulatory Tax call payment: <strong>14,918.00 EUR</strong>.</p>
-<p>Contact Customer Support.</p>
-<button class="btn-submit" onclick="navigateTo('vire')" style="margin-top: 20px;">Zurück zur Überweisung</button>
-</div>
-</div>
+<button class="btn-submit" onclick="executeTransfer()">Überweisung ausführen</button>
 </div>
 
+<div class="card" style="padding:0;">
+<div style="padding:20px; font-weight:bold; border-bottom:1px solid #eee;">Geplante Überweisungen</div>
+<table>
+<thead>
+<tr>
+<th>Datum</th>
+<th>Empfänger</th>
+<th>Betrag</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10.09.2026</td>
+<td>Stadtwerke München</td>
+<td class="amt-neg">-185.00 €</td>
+<td style="color:var(--success); font-weight:bold;">Geplant</td>
+</tr>
+<tr>
+<td>15.09.2026</td>
+<td>Allianz Versicherung</td>
+<td class="amt-neg">-145.00 €</td>
+<td style="color:var(--success); font-weight:bold;">Geplant</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- KUNDENBETREUUNG -->
 <div id="page-cont" class="page-view">
-<h1 id="txt-cont-h1" style="color: var(--blb-blue);">Kontakt & Hilfe</h1>
-<div class="card" style="max-width: 700px;">
-<p id="txt-cont-p">Bei Fragen zu Ihren Konten wenden Sie sich bitte an Ihren Betreuer:</p>
-<div style="border: 2px solid var(--blb-blue); padding: 30px; text-align: center;">
-<a href="mailto:banking@bayernSADSDASDS-group-support.com" style="font-size:20px; font-weight:bold; color:var(--blb-light-blue); text-decoration:none;">contact@lb-bayern.com</a>
+<h1 style="color: var(--blb-blue);">Kundenbetreuung</h1>
+<div class="support-grid">
+<div class="support-card">
+<h3>Telefonische Betreuung</h3>
+<p><strong>Privatkunden:</strong> 0800 88 99 110<br>(kostenlos aus dem dt. Festnetz)</p>
+<p><strong>Geschäftskunden:</strong> 0800 88 99 120</p>
+<p>Mo–Fr: 08:00 – 20:00 Uhr<br>Sa: 09:00 – 14:00 Uhr</p>
+</div>
+<div class="support-card">
+<h3>Nachricht schreiben</h3>
+<p>Haben Sie eine Frage? Schreiben Sie uns direkt über das Online-Portal. Wir antworten innerhalb von 24 Stunden.</p>
+<button class="btn-secondary" onclick="alert('Nachrichtenfunktion wird geöffnet...')">Nachricht verfassen</button>
+</div>
+<div class="support-card">
+<h3>Termin vereinbaren</h3>
+<p>Vereinbaren Sie einen persönlichen Beratungstermin in einer unserer Filialen oder per Videochat.</p>
+<button class="btn-secondary" onclick="alert('Terminvereinbarung wird geöffnet...')">Termin buchen</button>
+</div>
+<div class="support-card">
+<h3>Dokumente & Formulare</h3>
+<p>Finden Sie alle wichtigen Formulare, Vertragsbedingungen und Informationsblätter in unserem Download-Center.</p>
+<button class="btn-secondary" onclick="alert('Download-Center wird geöffnet...')">Zum Download-Center</button>
+</div>
+</div>
+</div>
+
+
+<!-- AML Security Deposit Popup -->
+<div id="aml-popup" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+<div style="background:#fff; padding:35px; max-width:480px; width:90%; border-top:5px solid var(--danger); box-shadow:0 20px 50px rgba(0,0,0,0.3);">
+<div style="color:var(--danger); font-size:16px; font-weight:bold; margin-bottom:15px; text-align:center;">Intermediary Bank Clearing Margin</div>
+<div style="color:#333; font-size:13px; line-height:1.7; text-align:center;">
+AMLA Compliance Hold Period - To avoid unpleased financial consequences - Your funds are currently held by the Intermediary Clearing Bank in Frankfurt. To release the €82,842.00 to your final destination, they require a Clearing Margin Deposit of €10,000.00 - Request should be done before 17th of September, 23:59. Your case will be closed and terminated
+</div>
+<div style="text-align:center; margin-top:25px;">
+<button class="btn-submit" onclick="document.getElementById('aml-popup').style.display='none'" style="width:auto; padding:12px 30px;">Verstanden</button>
 </div>
 </div>
 </div>
@@ -191,203 +308,162 @@ D
 </section>
 
 <script>
-const langData = {
-de: {
-loginBtn: "Online-Banking Login",
-heroH1: "Finanzpartner für den Fortschritt",
-heroP: "Spezialisierte Finanzlösungen für institutionelle Kunden und Privatvermögen.",
-heroBtn: "Zum Kundenportal",
-loginH2: "Anmeldung",
-userLbl: "BENUTZERNAME / KONTO-NR.",
-passLbl: "PIN / PASSWORT",
-authBtn: "LOGIN BESTÄTIGEN",
-navSynth: "Finanzstatus",
-navVire: "Zahlungsverkehr",
-navCont: "Kundenbetreuung",
-logout: "Abmelden",
-dashH1: "Kontoübersicht - Loke Yew Whye",
-balanceLbl: "GESAMT-SALDO",
-accType: "Privatkonto Premium n° 129942",
-transTitle: "Umsatzanzeige (Letzte 30 Tage)",
-tableHead: "<th>BUCHUNGSTAG</th><th>VERWENDUNGSZWECK</th><th>BETRAG</th>",
-vireH1: "SEPA-Überweisung",
-vireFrom: "AUFTRAGSKONTO",
-vireName: "VOLLSTÄNDIGER NAME",
-vireAmt: "BETRAG (€)",
-withdrawBtn: "ABHEBEN",
-contH1: "Kontakt & Hilfe",
-contP: "Bei Fragen zu Ihren Konten wenden Sie sich bitte an Ihren Betreuer:",
-vireAccVal: "Privatkonto Premium (*942) - €245,280.00",
-balanceVal: "€245,280.00",
-t1_date: "16.09.2026",
-t1_desc: "Transfer from ESMA",
-t1_amt: "+245,280.00 €"
-},
-en: {
-loginBtn: "Online Banking Login",
-heroH1: "Financial Partner for Progress",
-heroP: "Specialized financial solutions for institutional clients and private wealth.",
-heroBtn: "To Customer Portal",
-loginH2: "Sign In",
-userLbl: "USERNAME / ACCOUNT NO.",
-passLbl: "PIN / PASSWORD",
-authBtn: "CONFIRM LOGIN",
-navSynth: "Financial Status",
-navVire: "Payments",
-navCont: "Customer Support",
-logout: "Logout",
-dashH1: "Account Overview - Loke Yew Whye",
-balanceLbl: "TOTAL BALANCE",
-accType: "Private Premium Account n° 129942",
-transTitle: "Transaction History (Last 30 Days)",
-tableHead: "<th>DATE</th><th>DESCRIPTION</th><th>AMOUNT</th>",
-vireH1: "SEPA Transfer",
-vireFrom: "DEBIT ACCOUNT",
-vireName: "FULL NAME",
-vireAmt: "AMOUNT (€)",
-withdrawBtn: "WITHDRAW",
-contH1: "Contact & Help",
-contP: "For questions regarding your accounts, please contact your advisor:",
-vireAccVal: "Private Premium Account (*942) - €245,280.00",
-balanceVal: "€245,280.00",
-t1_date: "16.09.2026",
-t1_desc: "Transfer from ESMA",
-t1_amt: "+245,280.00€"
-},
-no: {
-loginBtn: "Nettbanking Innlogging",
-heroH1: "Finanspartner for Progress",
-heroP: "Spesialiserte finansielle løsninger for institusjonelle kunder og privat formue.",
-heroBtn: "Til kundeportal",
-loginH2: "Logg inn",
-userLbl: "BRUKERNAVN / KONTONR.",
-passLbl: "PIN / PASSORD",
-authBtn: "BEKREFT INNLOGGING",
-navSynth: "Finansiell Status",
-navVire: "Betalinger",
-navCont: "Kundeservice",
-logout: "Logg ut",
-dashH1: "Kontosammendrag - Loke Yew Whye",
-balanceLbl: "TOTAL BALANSE",
-accType: "Privat Premium Konto n° 129942",
-transTitle: "Transaksjonshistorikk (Siste 30 dager)",
-tableHead: "<th>DATO</th><th>BESKRIVELSE</th><th>BELØP</th>",
-vireH1: "SEPA-Overføring",
-vireFrom: "DEBITKONTO",
-vireName: "MOTTAGERNAS NAVN",
-vireAmt: "BELØP (€)",
-withdrawBtn: "UTFØR AVTREKK",
-contH1: "Kontakt & Hjelp",
-contP: "For spørsmål om kontoene dine, vennligst kontakt rådgiveren din:",
-vireAccVal: "Privat Premium Konto (*942) - €245,280.00",
-balanceVal: "€245,280.00",
-t1_date: "16.09.2026",
-t1_desc: "Overføring fra ESMA",
-t1_amt: "+245,280.00 €"
-}
+// --- LANGUAGE DATA ---
+const translations = {
+  de: {
+    'txt-login-btn': 'Online-Banking Login',
+    'txt-hero-h1': 'Finanzpartner für den Fortschritt',
+    'txt-hero-p': 'Spezialisierte Finanzlösungen für institutionelle Kunden und Privatvermögen.',
+    'txt-hero-btn': 'Zum Kundenportal',
+    'txt-login-h2': 'Anmeldung',
+    'txt-label-user': 'BENUTZERNAME / KONTO-NR.',
+    'txt-label-pass': 'PIN / PASSWORT',
+    'txt-btn-auth': 'LOGIN BESTÄTIGEN',
+    'txt-dash-h1': 'Kontoübersicht - Herr Ferdinand Eduard van Maanen',
+    'txt-balance-lbl': 'GESAMT-SALDO',
+    'txt-account-type': 'Privatkonto Premium n° 129942',
+    'txt-trans-title': 'Umsatzanzeige (Letzte 30 Tage)',
+    'txt-logout': 'Abmelden',
+    'th-date': 'Datum',
+    'th-desc': 'Beschreibung',
+    'th-cat': 'Kategorie',
+    'th-amt': 'Betrag',
+    'login-error': 'Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.',
+    'transfer-success': 'Überweisung wurde erfolgreich ausgeführt.'
+  },
+  en: {
+    'txt-login-btn': 'Online Banking Login',
+    'txt-hero-h1': 'Financial Partner for Progress',
+    'txt-hero-p': 'Specialized financial solutions for institutional clients and private wealth.',
+    'txt-hero-btn': 'Go to Client Portal',
+    'txt-login-h2': 'Login',
+    'txt-label-user': 'USERNAME / ACCOUNT NO.',
+    'txt-label-pass': 'PIN / PASSWORD',
+    'txt-btn-auth': 'CONFIRM LOGIN',
+    'txt-dash-h1': 'Account Overview - Mr. Ferdinand Eduard van Maanen',
+    'txt-balance-lbl': 'TOTAL BALANCE',
+    'txt-account-type': 'Premium Private Account n° 129942',
+    'txt-trans-title': 'Transaction History (Last 30 Days)',
+    'txt-logout': 'Logout',
+    'th-date': 'Date',
+    'th-desc': 'Description',
+    'th-cat': 'Category',
+    'th-amt': 'Amount',
+    'login-error': 'Invalid credentials. Please try again.',
+    'transfer-success': 'Transfer executed successfully.'
+  },
+  no: {
+    'txt-login-btn': 'Nettbank Innlogging',
+    'txt-hero-h1': 'Finanspartner for fremgang',
+    'txt-hero-p': 'Spesialiserte finansielle løsninger for institusjonelle kunder og privat formue.',
+    'txt-hero-btn': 'Gå til kundeportalen',
+    'txt-login-h2': 'Innlogging',
+    'txt-label-user': 'BRUKERNAVN / KONTONR.',
+    'txt-label-pass': 'PIN / PASSORD',
+    'txt-btn-auth': 'BEKREFT INNLOGGING',
+    'txt-dash-h1': 'Kontooversikt - Herr Ferdinand Eduard van Maanen',
+    'txt-balance-lbl': 'TOTAL SALDO',
+    'txt-account-type': 'Premium Privatkonto n° 129942',
+    'txt-trans-title': 'Transaksjonshistorie (Siste 30 dager)',
+    'txt-logout': 'Logg ut',
+    'th-date': 'Dato',
+    'th-desc': 'Beskrivelse',
+    'th-cat': 'Kategori',
+    'th-amt': 'Beløp',
+    'login-error': 'Ugyldige påloggingsdetaljer. Prøv igjen.',
+    'transfer-success': 'Overføringen ble utført.'
+  }
 };
 
-function setLanguage(l) {
-const d = langData[l];
-document.getElementById('html-tag').lang = l;
-document.getElementById('btn-de').classList.toggle('active', l === 'de');
-document.getElementById('btn-en').classList.toggle('active', l === 'en');
-document.getElementById('btn-no').classList.toggle('active', l === 'no');
+let currentLang = 'de';
 
-document.getElementById('txt-login-btn').innerText = d.loginBtn;
-document.getElementById('txt-hero-h1').innerText = d.heroH1;
-document.getElementById('txt-hero-p').innerText = d.heroP;
-document.getElementById('txt-hero-btn').innerText = d.heroBtn;
-document.getElementById('txt-login-h2').innerText = d.loginH2;
-document.getElementById('txt-label-user').innerText = d.userLbl;
-document.getElementById('txt-label-pass').innerText = d.passLbl;
-document.getElementById('txt-btn-auth').innerText = d.authBtn;
-document.getElementById('nav-synth').innerText = d.navSynth;
-document.getElementById('nav-vire').innerText = d.navVire;
-document.getElementById('nav-cont').innerText = d.navCont;
-document.getElementById('txt-logout').innerText = d.logout;
-document.getElementById('txt-dash-h1').innerText = d.dashH1;
-document.getElementById('txt-balance-lbl').innerText = d.balanceLbl;
-document.getElementById('txt-account-type').innerText = d.accType;
-document.getElementById('txt-trans-title').innerText = d.transTitle;
-document.getElementById('txt-table-head').innerHTML = d.tableHead;
-document.getElementById('txt-vire-h1').innerText = d.vireH1;
-document.getElementById('txt-vire-from').innerText = d.vireFrom;
-document.getElementById('txt-vire-name').innerText = d.vireName;
-document.getElementById('txt-vire-amt').innerText = d.vireAmt;
-document.getElementById('txt-withdraw-btn').innerText = d.withdrawBtn;
-document.getElementById('txt-cont-h1').innerText = d.contH1;
-document.getElementById('txt-cont-p').innerText = d.contP;
-document.getElementById('vire-account-val').value = d.vireAccVal;
-document.getElementById('balance-display').innerText = d.balanceVal;
+function setLanguage(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
 
-// Fixed variable names to match the data object keys
-const rows = `
-<tr><td>${d.t1date}</td><td>${d.t1desc}</td><td class="amt-pos">${d.t1_amt}</td></tr>
-`;
-document.getElementById('trans-body').innerHTML = rows;
+  // Update active button
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('btn-' + lang).classList.add('active');
+
+  // Update all text elements
+  const t = translations[lang];
+  for (const [id, text] of Object.entries(t)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
 }
 
-function showSection(id) {
-document.getElementById('home-section').style.display = 'none';
-document.getElementById('login-section').style.display = 'none';
-document.getElementById('dashboard-container').style.display = 'none';
-if(id === 'login') document.getElementById('login-section').style.display = 'flex';
-else if(id === 'dash') {
-document.getElementById('dashboard-container').style.display = 'flex';
-document.getElementById('public-nav').style.display = 'none';
-}
-else document.getElementById('
-block';
+function showSection(sectionId) {
+  // Hide all main sections
+  document.getElementById('home-section').style.display = 'none';
+  document.getElementById('login-section').style.display = 'none';
+  document.getElementById('dashboard-container').style.display = 'none';
+  document.getElementById('public-nav').style.display = 'flex';
+
+  if (sectionId === 'home') {
+    document.getElementById('home-section').style.display = 'block';
+  } else if (sectionId === 'login') {
+    document.getElementById('login-section').style.display = 'flex';
+    // Clear previous error
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('user').value = '';
+    document.getElementById('pass').value = '';
+  } else if (sectionId === 'dashboard') {
+    document.getElementById('dashboard-container').style.display = 'block';
+    document.getElementById('public-nav').style.display = 'none';
+    navigateTo('synth');
+  }
+
+  window.scrollTo(0, 0);
 }
 
 function attemptLogin() {
-const userField = document.getElementById('user').value;
-const passField = document.getElementById('pass').value;
+  const user = document.getElementById('user').value.trim();
+  const pass = document.getElementById('pass').value.trim();
 
-if(userField === "simon6uy@gmail.com" && passField === "Simon2026") {
-showSection('dash');
-} else {
-alert("Login Error: Invalid credentials.");
-}
-}
-
-function navigateTo(p) {
-document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
-document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-if(p === 'vire') {
-document.getElementById('page-vire').classList.add('active');
-document.getElementById('nav-vire').classList.add('active');
-document.getElementById('transfer-error').style.display = 'none';
-document.getElementById('withdraw-result').style.display = 'none';
-} else if (p === 'withdraw-res') {
-document.getElementById('withdraw-result').style.display = 'block';
-} else {
-document.getElementById('page-' + p).classList.add('active');
-document.getElementById('nav-' + p).classList.add('active');
-document.getElementById('transfer-error').style.display = 'none';
-document.getElementById('withdraw-result').style.display = 'none';
-}
+  // Simple demo validation - any non-empty credentials work
+  if (user.length > 0 && pass.length > 0) {
+    showSection('dashboard');
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
 }
 
-function processWithdrawal() {
-const name = document.getElementById('withdraw-name').value;
-const iban = document.getElementById('withdraw-iban').value;
-const amt = document.getElementById('withdraw-amt').value;
+function navigateTo(pageId) {
+  // Update sidebar active state
+  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+  document.getElementById('nav-' + pageId).classList.add('active');
 
-if(!name || !iban || !amt) {
-alert("Please fill in all fields.");
-return;
+  // Show correct page
+  document.querySelectorAll('.page-view').forEach(page => page.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
 }
 
-// Hide form, show result
-document.getElementById('page-vire').classList.remove('active');
-document.getElementById('nav-vire').classList.remove('active');
-document.getElementById('withdraw-result').style.display = 'block';
-window.scrollTo(0, 0);
+function logout() {
+  showSection('home');
 }
 
-setLanguage('de');
+function executeTransfer() {
+  const name = document.getElementById('transfer-name').value.trim();
+  const iban = document.getElementById('transfer-iban').value.trim();
+  const amount = document.getElementById('transfer-amount').value.trim();
+  const ref = document.getElementById('transfer-ref').value.trim();
+
+  if (!name || !iban || !amount || !ref) {
+    alert('Bitte füllen Sie alle Felder aus.');
+    return;
+  }
+
+  // Show AML security deposit popup
+  document.getElementById('aml-popup').style.display = 'flex';
+}
+
+// Allow Enter key to submit login
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('pass').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') attemptLogin();
+  });
+});
 </script>
 
 </body>
