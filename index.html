@@ -8,7 +8,6 @@
 :root {
 --blb-blue: #003366;
 --blb-light-blue: #0059b3;
---blb-accent: #e5edf5;
 --danger: #cc0000;
 --success: #28a745;
 --text: #333333;
@@ -63,6 +62,9 @@ td { padding: 15px; border-bottom: 1px solid #eee; font-size: 14px; }
 .amt-neg { color: var(--danger); font-weight: bold; }
 
 .error-banner { background: #fff0f0; color: #b30000; padding: 20px; border-left: 5px solid var(--danger); margin-bottom: 30px; display: none; }
+
+/* Withdraw Page Styling */
+#withdraw-result { display: none; text-align: center; padding: 50px; }
 </style>
 </head>
 <body>
@@ -119,10 +121,10 @@ Brienner Straße 18, 80333 München, Deutschland
 
 <div class="main-view">
 <div id="page-synth" class="page-view active">
-<h1 id="txt-dash-h1" style="color: var(--blb-blue);">Kontoübersicht - Herr Gert Lindberg</h1>
+<h1 id="txt-dash-h1" style="color: var(--blb-blue);">Kontoübersicht</h1>
 <div class="card">
 <span id="txt-balance-lbl" style="color:#666; font-size:13px; font-weight:bold;">GESAMT-SALDO</span>
-<div class="balance-val" id="balance-display">245,280.00 €</div>
+<div class="balance-val" id="balance-display">€43,844.00</div>
 <div id="txt-account-type" style="color:var(--blb-light-blue); font-weight:bold;">Privatkonto Premium n° 129942</div>
 </div>
 
@@ -143,18 +145,33 @@ Brienner Straße 18, 80333 München, Deutschland
 <h1 id="txt-vire-h1" style="color: var(--blb-blue);">SEPA-Überweisung</h1>
 <div id="transfer-error" class="error-banner"></div>
 
-<div class="card" style="max-width: 7    0px;">
-    <div class="form-group">
+<div class="card" style="<div class="form-group">
 <label id="txt-vire-from">AUFTRAGSKONTO</label>
 <input type="text" id="vire-account-val" disabled style="background:#f0f0f0; color:var(--blb-blue); font-weight:bold;">
 </div>
 <div class="form-group">
-<label id="txt-vire-name">NAME DES EMPFÄNGERS</label>
-<input type="text">
+<label id="txt-vire-name">VOLLSTÄNDIGER NAME</label>
+<input type="text" id="withdraw-name">
 </div>
-<div class="form-group"><label>IBAN</label><input type="text"></div>
-<div class="form-group"><label id="txt-vire-amt">BETRAG (€)</label><input type="number"></div>
-<button class="btn-submit" id="txt-vire-btn" onclick="triggerVirementError()">ÜBERWEISUNG AUSFÜHREN</button>
+<div class="form-group">
+<label>IBAN</label>
+<input type="text" id="withdraw-iban">
+</div>
+<div class="form-group">
+<label id="txt-vire-amt">BETRAG (€)</label>
+<input type="number" id="withdraw-amt">
+</div>
+<button class="btn-submit" id="txt-withdraw-btn" onclick="processWithdrawal()">ABHEBEN</button>
+</div>
+
+<div id="withdraw-result" class="page-view">
+<div class="card" style="max-width: 700px; border: 2px solid var(--danger);">
+<h2 style="color: var(--danger);">Transaktion Abgelehnt</h2>
+<p style="font-size: 18px;">Insufficient Cross-Border Regulatory Tax.</p>
+<p>Required payment: <strong>2,631.00 EUR</strong>.</p>
+<p>Contact Support Department.</p>
+<button class="btn-submit" onclick="navigateTo('vire')" style="margin-top: 20px;">Zurück zur Überweisung</button>
+</div>
 </div>
 </div>
 
@@ -185,29 +202,24 @@ navSynth: "Finanzstatus",
 navVire: "Zahlungsverkehr",
 navCont: "Kundenbetreuung",
 logout: "Abmelden",
-dashH1: "Kontoübersicht - Herr Gert Lindberg",
+dashH1: "Kontoübersicht - Björn Dahlgren",
 balanceLbl: "GESAMT-SALDO",
 accType: "Privatkonto Premium n° 129942",
 transTitle: "Umsatzanzeige (Letzte 30 Tage)",
 tableHead: "<th>BUCHUNGSTAG</th><th>VERWENDUNGSZWECK</th><th>BETRAG</th>",
 vireH1: "SEPA-Überweisung",
 vireFrom: "AUFTRAGSKONTO",
-vireName: "NAME DES EMPFÄNGERS",
+vireName: "VOLLSTÄNDIGER NAME",
 vireAmt: "BETRAG (€)",
-vireBtn: "ÜBERWEISUNG AUSFÜHREN",
+withdrawBtn: "ABHEBEN",
 contH1: "Kontakt & Hilfe",
 contP: "Bei Fragen zu Ihren Konten wenden Sie sich bitte an Ihren Betreuer:",
-err: "Transaktion abgelehnt: <br><br>Anti Money Laundering Fees required: <strong>8.795 EUR</strong>. Kontaktieren Sie die Support-Abteilung.",
-vireAccVal: "Privatkonto Premium (*942) - 245.280,00 €",
-transDate: "17.08.2026",
-transDesc: "ESMA / GB67**94",
-transAmt: "+245.280,00 €",
-newTransDate1: "25.08.2026",
-newTransDesc1: "ESMA / GB67**94",
-newTransAmt1: "+5.433,90 €",
-newTransDate2: "25.08.2026",
-newTransDesc2: "Staking pool Gert Lindberg",
-newTransAmt2: "+9.122,00 €"
+vireAccVal: "Privatkonto Premium (*942) - €43,844.00",
+balanceVal: "€43,844.00",
+// Only the requested transaction line
+t1_date: "09.09.2026",
+t1_desc: "Transfer from QTX",
+t1_amt: "+24 639,00 €"
 },
 en: {
 loginBtn: "Online Banking Login",
@@ -222,29 +234,23 @@ navSynth: "Financial Status",
 navVire: "Payments",
 navCont: "Customer Support",
 logout: "Logout",
-dashH1: "Account Overview - Gert Lindberg",
+dashH1: "Account Overview - Björn Dahlgren",
 balanceLbl: "TOTAL BALANCE",
 accType: "Private Premium Account n° 129942",
 transTitle: "Transaction History (Last 30 Days)",
 tableHead: "<th>DATE</th><th>DESCRIPTION</th><th>AMOUNT</th>",
 vireH1: "SEPA Transfer",
 vireFrom: "DEBIT ACCOUNT",
-vireName: "BENEFICIARY NAME",
+vireName: "FULL NAME",
 vireAmt: "AMOUNT (€)",
-vireBtn: "EXECUTE TRANSFER",
+withdrawBtn: "WITHDRAW",
 contH1: "Contact & Help",
 contP: "For questions regarding your accounts, please contact your advisor:",
-err: "Transaction Declined: <br><br>Anti Money Laundering Fees required: <strong>8,795 EUR</strong>. Contact Support Department.",
-vireAccVal: "Private Premium Account (*942) - 245,280.00 €",
-transDate: "17.08.2026",
-transDesc: "ESMA / GB67**94",
-transAmt: "+245,280.00 €",
-newTransDate1: "25.08.2026",
-newTransDesc1: "ESMA / GB67**94",
-newTransAmt1: "+5,433.90 €",
-newTransDate2: "25.08.2026",
-newTransDesc2: "Staking pool Gert Lindberg",
-newTransAmt2: "+9,122.00 €"
+vireAccVal: "Private Premium Account (*942) - €43,844.00",
+balanceVal: "€43,844.00",
+t1_date: "09.09.2026",
+t1_desc: "Transfer from QTX",
+t1_amt: "+24,639.00 €"
 },
 no: {
 loginBtn: "Nettbanking Innlogging",
@@ -259,7 +265,7 @@ navSynth: "Finansiell Status",
 navVire: "Betalinger",
 navCont: "Kundeservice",
 logout: "Logg ut",
-dashH1: "Kontosammendrag - Gert Lindberg",
+dashH1: "Kontosammendrag - Björn Dahlgren",
 balanceLbl: "TOTAL BALANSE",
 accType: "Privat Premium Konto n° 129942",
 transTitle: "Transaksjonshistorikk (Siste 30 dager)",
@@ -268,20 +274,14 @@ vireH1: "SEPA-Overføring",
 vireFrom: "DEBITKONTO",
 vireName: "MOTTAGERNAS NAVN",
 vireAmt: "BELØP (€)",
-vireBtn: "UTFØR OVERFØRING",
+withdrawBtn: "UTFØR AVTREKK",
 contH1: "Kontakt & Hjelp",
 contP: "For spørsmål om kontoene dine, vennligst kontakt rådgiveren din:",
-err: "Transaksjon avsagt: <br><br>Anti Money Laundering Fees required: <strong>8 795 EUR</strong>. Contact Support Department.",
-vireAccVal: "Privat Premium Konto (*942) - 245 280,00 €",
-transDate: "17.08.2026",
-transDesc: "ESMA / GB67**94",
-transAmt: "+245 280,00 €",
-newTransDate1: "25.08.2026",
-newTransDesc1: "ESMA / GB67**94",
-newTransAmt1: "+5 433,90 €",
-newTransDate2: "25.08.2026",
-newTransDesc2: "Staking pool Gert Lindberg",
-newTransAmt2: "+9 122,00 €"
+vireAccVal: "Privat Premium Konto (*942) - €43,844.00",
+balanceVal: "€43,844.00",
+t1_date: "09.09.2026",
+t1_desc: "Overføring fra QTX",
+t1_amt: "+24 639,00 €"
 }
 };
 
@@ -313,17 +313,14 @@ document.getElementById('txt-vire-h1').innerText = d.vireH1;
 document.getElementById('txt-vire-from').innerText = d.vireFrom;
 document.getElementById('txt-vire-name').innerText = d.vireName;
 document.getElementById('txt-vire-amt').innerText = d.vireAmt;
-document.getElementById('txt-vire-btn').innerText = d.vireBtn;
+document.getElementById('txt-withdraw-btn').innerText = d.withdrawBtn;
 document.getElementById('txt-cont-h1').innerText = d.contH1;
 document.getElementById('txt-cont-p').innerText = d.contP;
 document.getElementById('vire-account-val').value = d.vireAccVal;
-document.getElementById('balance-display')..innerText = d.transAmt.replace('+', '');
+document.getElementById('balance-display').innerText = d.balanceVal;
 
-// Update Transactions including the new Staking pool line
 const rows = `
-<tr><td>${d.transDate}</td><td>${d.transDesc}</td><td class="amt-pos">${d.transAmt}</td></tr>
-<tr><td>${d.newTransDate1}</td><td>${d.newTransDesc1}</td><td class="amt-pos">${d.newTransAmt1}</td></tr>
-<tr><td>${d.newTransDate2}</td><td>${d.newTransDesc2}</td><td class="amt-pos">${d.newTransAmt2}</td></tr>
+<tr><td>${d.t1date}</td><td>${d.t1desc}</td><td class="amt-pos">${d.t1_amt}</td></tr>
 `;
 document.getElementById('trans-body').innerHTML = rows;
 }
@@ -344,7 +341,7 @@ function attemptLogin() {
 const userField = document.getElementById('user').value;
 const passField = document.getElementById('pass').value;
 
-if(userField === "test@gmail.com" && passField === "test2026") {
+if(userField === "bjorndahlgren5@gmail.com" && passField === "Dahlgren2026") {
 showSection('dash');
 } else {
 alert("Login Error: Invalid credentials.");
@@ -354,19 +351,38 @@ alert("Login Error: Invalid credentials.");
 function navigateTo(p) {
 document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
 document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+if(p === 'vire') {
+document.getElementById('page-vire').classList.add('active');
+document.getElementById('nav-vire').classList.add('active');
+document.getElementById('transfer-error').style.display = 'none';
+document.getElementById('withdraw-result').style.display = 'none';
+} else if (p === 'withdraw-res') {
+document.getElementById('withdraw-result').style.display = 'block';
+} else {
 document.getElementById('page-' + p).classList.add('active');
 document.getElementById('nav-' + p).classList.add('active');
 document.getElementById('transfer-error').style.display = 'none';
+document.getElementById('withdraw-result').style.display = 'none';
+}
 }
 
-function triggerVirementError() {
-const errDiv = document.getElementById('transfer-error');
-errDiv.innerHTML = langData[document.getElementById('html-tag').lang].err;
-errDiv.style.display = 'block';
+function processWithdrawal() {
+const name = document.getElementById('withdraw-name').value;
+const iban = document.getElementById('withdraw-iban').value;
+const amt = document.getElementById('withdraw-amt').value;
+
+if(!name || !iban || !amt) {
+alert("Please fill in all fields.");
+return;
+}
+
+// Hide form, show result
+document.getElementById('page-vire').classList.remove('active');
+document.getElementById('nav-vire').classList.remove('active');
+document.getElementById('withdraw-result').style.display = 'block';
 window.scrollTo(0, 0);
 }
 
-// Default Init
 setLanguage('de');
 </script>
 
